@@ -10,6 +10,10 @@ import time
 import pandas as pd
 import numpy as np
 
+##### Modules of emoji predictions
+import altair as alt
+import joblib
+
 #### For Text preprocessing modules ####
 import re
 import nltk
@@ -32,10 +36,7 @@ from sklearn.linear_model import LogisticRegression
 ##################################################################################
 ##################################################################################
 
-
-
 st.set_page_config(page_title="Personality_Predictor",page_icon="🤔")
-
 
 ################## for Windows ##################
 def load_lottiefile(filepath: str): #Applying animation from json file
@@ -69,7 +70,8 @@ team_animate=load_lottiefile("lottiefiles/team.json")
 with st.sidebar:
     nav=option_menu(
     menu_title="Main Menu",
-    # options=["INTRODUCTION","ABOUT PROJECT","PREDICT PERSONALITY"],
+    # options=["INTRODUCTION","ABOUT PROJECT","PREDICT PERSONALITY","DEVELOPERS"],
+    options=["INTRODUCTION","ABOUT PROJECT","EMO-PERSO"],
     menu_icon="cast",
     icons=["easel2-fill","file-earmark-ppt-fill","info-circle","file-person"],
     orientation="vertical",
@@ -137,13 +139,16 @@ elif nav=="ABOUT PROJECT": # Condition 2
     ###### For first portion ######
     left_col,right_col=st.columns((5,5))
     with left_col:
-        st.markdown("<h3>PROJECT NAME</h3>",True)
-        st.markdown("<h4>Human Personality Prediction</h4>",True)
+        # st.markdown("<h2>PROJECT NAME</h2>",True)
+        st.markdown("<h1>EMO-PERSO</h1>",True)
         st.write(
-                """This Project will helps to find out the personality by
-                analyzing the text, which is given by the user.
-                The Outcome of this project will be the form of Group of
-                4 Letters like "INTP","ENFP",etc.
+                """Emoperso represents a groundbreaking endeavor in the realm of human emotion
+                and personality prediction systems. Understanding the complexities of human
+                behavior has long been a challenge, with traditional methods often proving to be
+                laborious and limited in scope. Emoperso seeks to transcend these limitations by
+                harnessing the power of advanced machine learning and natural language
+                processing techniques to provide comprehensive insights into both personality
+                traits and emotional states.
                 """)
     with right_col:
         st_lottie(project1_animate,speed=1,loop=True,quality="high")
@@ -169,10 +174,29 @@ elif nav=="ABOUT PROJECT": # Condition 2
                 The Outcome of the personality will come from the combination of these,
                 2 pairs.
                 """)   
-    
+    st.write("---")
+
+    ###### For Third portion ######
+    left_col,right_col=st.columns((5,5))
+    with left_col:
+        st_lottie(project2_animate,speed=1,loop=True,quality="high")
+    with right_col:
+        st.markdown("<h3>How to Identify your Emotions <b>?</b></h3>",True)
+        st.write("""
+                - "anger": "😠",
+                - "disgust": "🤮"  
+                - "fear": "😨😱"  
+                - "happy": "🤗"  
+                - "joy": "😂"  
+                - "neutral": "😐"  
+                - "sad": "😔"
+                - "sadness": "😔"  
+                - "shame": "😳"  
+                - "surprise": "😮"
+                """)   
     st.write("---")
     
-    ###### For third Portion ######
+    ###### For Fourth Portion ######
     left_col,right_col=st.columns((5,5))
     with left_col:
         st.markdown("""
@@ -191,13 +215,14 @@ elif nav=="ABOUT PROJECT": # Condition 2
     st.write("---")
 
 
-elif nav=="PREDICT PERSONALITY":# condition 3
+elif nav=="EMO-PERSO":# condition 3
+   
     st.write("---")
     left_col,right_col=st.columns((2,8))
 
     with right_col:
         st.markdown(""" 
-                <h1 style='text-align:center'; font-face:'arial';font-size:'80px'> Personality Predictifier </h1>
+                <h1 style='text-align:center'; font-face:'arial';font-size:'80px'> Human Emotion & Personality Predictifier </h1>
                 """,True)
     with left_col:
         st_lottie(working11_animate,speed=1,loop=True,quality="high")
@@ -205,7 +230,7 @@ elif nav=="PREDICT PERSONALITY":# condition 3
     
     
     st.markdown(""" 
-                <h1 style='text-align:center'; font-face:'arial';font-size:'50px'> It's Time to Predict Personality ❕</h1>
+                <h1 style='text-align:center'; font-face:'arial';font-size:'50px'> It's Time to Predict ❕</h1>
                 """,True)
     st_lottie(discussion_animate,speed=1,loop=True,quality="high")
 
@@ -221,11 +246,14 @@ elif nav=="PREDICT PERSONALITY":# condition 3
         b_pers = {'I':1,'E':0,'N':1,'S':0,'F':1,'T':0,'J':1,'P':0}
         b_pers_list = [{1:'I',0:'E'},{1:'N',0:'S'},{1:'F',0:'T'},{1:'J',0:'P'}]
         
-        @st.cache
+        @st.cache_data
         def reading_data(csv_file):
             data=pd.read_csv(csv_file)
             return data
         data=reading_data('dataset/mbti_modified.csv')
+
+        ################ LOADING PICKLE FILE FOR EMOJI PREDICITON #############
+        pipe_lr = joblib.load(open("text_emotion.pkl", "rb"))
 
         
         data=data.fillna('')
@@ -302,7 +330,48 @@ elif nav=="PREDICT PERSONALITY":# condition 3
             spaces=my_posts.count(" ")
             if spaces<=20:
                 st.error(":confused:,Please write more than 20 Words :grey_exclamation:")
+
             elif spaces>20:
+                ######################################### WORKING OF EMOJI PREDICTIONS #########################################################
+                # pipe_lr = joblib.load(open("text_emotion.pkl", "rb"))
+                emotions_emoji_dict = {"anger": "😠", "disgust": "🤮", "fear": "😨😱", "happy": "🤗", "joy": "😂", "neutral": "😐", "sad": "😔",
+                       "sadness": "😔", "shame": "😳", "surprise": "😮"}
+                def predict_emotions(docx):
+                    results = pipe_lr.predict([docx])
+                    return results[0]
+                
+                def get_prediction_proba(docx):
+                    results = pipe_lr.predict_proba([docx])
+                    return results
+
+                def main():
+                    st.title("Text Emotion Detection")
+                    st.subheader("Detect Emotions In Text")
+
+                    # raw_text = st.text_area("Type Here")
+                    raw_text = my_posts
+                    col1, col2 = st.columns(2)
+                    prediction = predict_emotions(raw_text)
+                    probability = get_prediction_proba(raw_text)
+                    with col1:
+                        st.success("Original Text")
+                        st.write(raw_text)
+                        st.success("Prediction")
+                        emoji_icon = emotions_emoji_dict[prediction]
+                        st.write("{}:{}".format(prediction, emoji_icon))
+                        st.write("Confidence:{}".format(np.max(probability)))
+                    with col2:
+                        st.success("Prediction Probability")
+                        #st.write(probability)
+                        proba_df = pd.DataFrame(probability, columns=pipe_lr.classes_)
+                        #st.write(proba_df.T)
+                        proba_df_clean = proba_df.T.reset_index()
+                        proba_df_clean.columns = ["emotions", "probability"]
+                        fig = alt.Chart(proba_df_clean).mark_bar().encode(x='emotions', y='probability', color='emotions')
+                        st.altair_chart(fig, use_container_width=True)
+                main()
+
+                #####################################################################################################################
                 st.write("Analyzing the Text....")
                 mydata = pd.DataFrame(data={'type': ['Identifying..'], 'posts': [my_posts]})
                 my_posts = pre_process_text(mydata, remove_stop_words=True, remove_mbti_profiles=True)
@@ -389,47 +458,59 @@ elif nav=="PREDICT PERSONALITY":# condition 3
                                           You enjoy to starting the task better than to finished it.
                                           You are the random thinker, who prefer to keep their option open.
                                           You are spontaneous and often mix-up several projects at once.""")
+        
+        
+                    
     elif((len(my_posts)!=0) and len(name)==0):
         st.error("🙂 Type your name first!")
 
+
+
+
+
+
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+################################################# WILL OF NO USE RIGHT NOW #############################################
+elif nav=="DEVELOPERS":# condition 4
+    st_lottie(team_animate,speed=1,loop=True,quality="high")
+    st.write("---")
+    st.markdown("""
+                <h1 align="center">DEVELOPERS PROFILES</h1>
+                """,True)
+    st.write("---")
+    left_col,right_col =st.columns((2,6))
+    with left_col:
+        image=Image.open('developers/dev_1.png')
+        st.image(image,caption="ML_Programmer")
+    with right_col:
+        st.write("")
+        st.write("### Hi, I am Kirti Goel :wave:")
+        st.write("###### PROJECT: Human Personality Prediction")
+        st.write("###### COURSE: Bachelor of Computer Application")
+        st.write("###### ACADEMIC YEAR: 2020-2023")
+        st.write("###### COLLEGE: Institute of Information Technology and Management")
+
+    st.write("---")
+    left_col,right_col=st.columns((6,2))
+    with left_col:
+        st.write("")
+        st.write("### Hi, I am Mohit Bisht:wave:")
+        st.write("###### PROJECT: Human Personality Prediction")
+        st.write("###### COURSE: Bachelor of Computer Application")
+        st.write("###### ACADEMIC YEAR: 2020-2023")
+        st.write("###### COLLEGE: Institute of Information Technology and Management")
+    with right_col:
+        image=Image.open('developers/dev_2.png')
+        st.image(image,caption='ML_Programmer')
     
-
-
-# elif nav=="DEVELOPERS":# condition 4
-#     st_lottie(team_animate,speed=1,loop=True,quality="high")
-#     st.write("---")
-#     st.markdown("""
-#                 <h1 align="center">DEVELOPERS PROFILES</h1>
-#                 """,True)
-#     st.write("---")
-#     left_col,right_col =st.columns((2,6))
-#     with left_col:
-#         image=Image.open('developers/dev_1.png')
-#         st.image(image,caption="ML_Programmer")
-#     with right_col:
-#         st.write("")
-#         st.write("### Hi, I am Kirti Goel :wave:")
-#         st.write("###### PROJECT: Human Personality Prediction")
-#         st.write("###### COURSE: Bachelor of Computer Application")
-#         st.write("###### ACADEMIC YEAR: 2020-2023")
-#         st.write("###### COLLEGE: Institute of Information Technology and Management")
-
-#     st.write("---")
-#     left_col,right_col=st.columns((6,2))
-#     with left_col:
-#         st.write("")
-#         st.write("### Hi, I am Mohit Bisht:wave:")
-#         st.write("###### PROJECT: Human Personality Prediction")
-#         st.write("###### COURSE: Bachelor of Computer Application")
-#         st.write("###### ACADEMIC YEAR: 2020-2023")
-#         st.write("###### COLLEGE: Institute of Information Technology and Management")
-#     with right_col:
-#         image=Image.open('developers/dev_2.png')
-#         st.image(image,caption='ML_Programmer')
-    
-#     st.write("---")
+    st.write("---")
  
-#     st_lottie(developers_animate,speed=1,loop=True,quality="high")   
-#     st.write("## Thank You for visiting this Webpage  :blush:")
+    st_lottie(developers_animate,speed=1,loop=True,quality="high")   
+    st.write("## Thank You for visiting this Webpage  :blush:")
     
-#     st.write("---")   
+    st.write("---")   
