@@ -88,3 +88,4 @@ wcwidth==0.2.8
 wordcloud==1.9.2
 xgboost==2.0.0
 zipp==3.17.0
+pywin32
